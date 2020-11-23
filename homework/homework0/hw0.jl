@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.11.8
+# v0.12.10
 
 using Markdown
 using InteractiveUtils
@@ -19,7 +19,7 @@ md"_homework 0, version 2_"
 # ╔═╡ 7308bc54-e6cd-11ea-0eab-83f7535edf25
 # edit the code below to set your name and kerberos ID (i.e. email without @mit.edu)
 
-student = (name = "Jazzy Doe", kerberos_id = "jazz")
+student = (name = "Dani Mateos", kerberos_id = "tronc")
 
 # press the ▶ button in the bottom right of this cell to run your edits
 # or use Shift+Enter
@@ -81,7 +81,7 @@ This is because the square root must be between the numbers `x/a` and `a`. Why?
 
 # ╔═╡ bccf0e88-e754-11ea-3ab8-0170c2d44628
 ex_1_1 = md"""
-your answer here
+whahaaaahaaa
 """ 
 
 # you might need to wait until all other cells in this notebook have completed running. 
@@ -99,11 +99,18 @@ Write a function newton_sqrt(x) which implements the above algorithm."
 
 # ╔═╡ 4896bf0c-e754-11ea-19dc-1380bb356ab6
 function newton_sqrt(x, error_margin=0.01, a=x / 2) # a=x/2 is the default value of `a`
-	return x # this is wrong, write your code here!
+	while abs(x - a^2) / x > error_margin
+		a = (a + x / a) / 2
+		@show a, x, error_margin, abs(x - (a^2) / x) 
+	end
+	return a # this is wrong, write your code here!
 end
 
-# ╔═╡ 7a01a508-e78a-11ea-11da-999d38785348
-newton_sqrt(2)
+# ╔═╡ 0102f78c-28ef-11eb-35c1-5dd07c8a204e
+2
+
+# ╔═╡ d620d038-28ec-11eb-3a1b-23e9a83f5fb9
+newton_sqrt(7)
 
 # ╔═╡ 682db9f8-e7b1-11ea-3949-6b683ca8b47b
 let
@@ -182,7 +189,7 @@ end
 md"Just like the definition above, our `sierpinksi` function is _recursive_: it calls itself."
 
 # ╔═╡ 02b9c9d6-e752-11ea-0f32-91b7b6481684
-complexity = 3
+complexity = 5
 
 # ╔═╡ 1eb79812-e7b5-11ea-1c10-63b24803dd8a
 if complexity == 3 
@@ -216,7 +223,12 @@ area_sierpinski(1) = 0.??
 
 # ╔═╡ ca8d2f72-e7b6-11ea-1893-f1e6d0a20dc7
 function area_sierpinski(n)
-	return 1.0
+	if n == 0
+		return 1
+	else
+		
+		return 3 / 4 * area_sierpinski(n - 1)
+	end
 end
 
 # ╔═╡ 71c78614-e7bc-11ea-0959-c7a91a10d481
@@ -319,7 +331,8 @@ has area **$(area_sierpinski(n))**
 # ╟─e7abd366-e7a6-11ea-30d7-1b6194614d0a
 # ╟─d62f223c-e754-11ea-2470-e72a605a9d7e
 # ╠═4896bf0c-e754-11ea-19dc-1380bb356ab6
-# ╠═7a01a508-e78a-11ea-11da-999d38785348
+# ╠═0102f78c-28ef-11eb-35c1-5dd07c8a204e
+# ╠═d620d038-28ec-11eb-3a1b-23e9a83f5fb9
 # ╟─682db9f8-e7b1-11ea-3949-6b683ca8b47b
 # ╟─088cc652-e7a8-11ea-0ca7-f744f6f3afdd
 # ╟─c18dce7a-e7a7-11ea-0a1a-f944d46754e5
@@ -347,4 +360,4 @@ has area **$(area_sierpinski(n))**
 # ╟─b3c7a050-e855-11ea-3a22-3f514da746a4
 # ╟─d3625d20-e6ce-11ea-394a-53208540d626
 # ╟─dfdeab34-e751-11ea-0f90-2fa9bbdccb1e
-# ╟─b923d394-e750-11ea-1971-595e09ab35b5
+# ╠═b923d394-e750-11ea-1971-595e09ab35b5
