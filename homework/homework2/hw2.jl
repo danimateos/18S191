@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.11.12
+# v0.12.11
 
 using Markdown
 using InteractiveUtils
@@ -59,7 +59,7 @@ Feel free to ask questions!
 # ╔═╡ 33e43c7c-f381-11ea-3abc-c942327456b1
 # edit the code below to set your name and kerberos ID (i.e. email without @mit.edu)
 
-student = (name = "Jazzy Doe", kerberos_id = "jazz")
+student = (name = "Dani Mateos", kerberos_id = "anteaterkillerbot")
 
 # you might need to wait until all other cells in this notebook have completed running. 
 # scroll around the page to see what's up
@@ -159,7 +159,10 @@ function remove_in_each_row_no_vcat(img, column_numbers)
 	for (i, j) in enumerate(column_numbers)
 		# EDIT THE FOLLOWING LINE and split it into two lines
 		# to avoid using `vcat`.
-		img′[i, :] .= vcat(img[i, 1:j-1], img[i, j+1:end])
+		
+		img′[i, 1:j-1] .=  img[i, 1:j-1]
+		img′[i, j:end] .=  img[i, j+1:end]
+		
 	end
 	img′
 end
@@ -203,7 +206,8 @@ function remove_in_each_row_views(img, column_numbers)
 	for (i, j) in enumerate(column_numbers)
 		# EDIT THE FOLLOWING LINE and split it into two lines
 		# to avoid using `vcat`.
-		img′[i, :] .= vcat(img[i, 1:j-1], img[i, j+1:end])
+		img′[i, 1:j-1] .=  @view img[i, 1:j-1]
+		img′[i, j:end] .=  @view img[i, j+1:end]
 	end
 	img′
 end
@@ -238,7 +242,7 @@ Nice! If you did your optimizations right, you should be able to get down the es
 
 # ╔═╡ fd819dac-f368-11ea-33bb-17148387546a
 views_observation = md"""
-<your answer here>
+Mogollón!
 """
 
 # ╔═╡ 318a2256-f369-11ea-23a9-2f74c566549b
@@ -331,7 +335,21 @@ random_seam(m, n, i) = reduce((a, b) -> [a..., clamp(last(a) + rand(-1:1), 1, n)
 # ╔═╡ abf20aa0-f31b-11ea-2548-9bea4fab4c37
 function greedy_seam(energies, starting_pixel::Int)
 	# you can delete the body of this function - it's just a placeholder.
-	random_seam(size(energies)..., starting_pixel)
+	
+	nrows = size(energies, 1)
+	seam = Array{Int64, 1}(undef, nrows)
+	pixel = starting_pixel
+	
+	for i in 1:nrows
+		
+		left = clamp(pixel - 1, 1, size(energies, 2))
+		right =  clamp(pixel + 1, 1, size(energies, 2))
+		
+		which = argmin(energies[i, left:right])
+		pixel = left + which - 1
+		seam[i] = pixel
+	end
+	seam
 end
 
 # ╔═╡ 5430d772-f397-11ea-2ed8-03ee06d02a22
@@ -640,17 +658,6 @@ if shrink_greedy
 	greedy_carved[greedy_n]
 end
 
-# ╔═╡ d88bc272-f392-11ea-0efd-15e0e2b2cd4e
-if shrink_recursive
-	recursive_carved = shrink_n(pika, 3, recursive_seam)
-	md"Shrink by: $(@bind recursive_n Slider(1:3, show_value=true))"
-end
-
-# ╔═╡ e66ef06a-f392-11ea-30ab-7160e7723a17
-if shrink_recursive
-	recursive_carved[recursive_n]
-end
-
 # ╔═╡ 4e3ef866-f3c5-11ea-3fb0-27d1ca9a9a3f
 if shrink_dict
 	dict_carved = shrink_n(img, 200, recursive_memoized_seam)
@@ -707,6 +714,17 @@ if compute_access
 	tracked = track_access(energy(pika))
 	least_energy(tracked, 1,7)
 	tracked.accesses[]
+end
+
+# ╔═╡ d88bc272-f392-11ea-0efd-15e0e2b2cd4e
+if shrink_recursive
+	recursive_carved = shrink_n(pika, 3, recursive_seam)
+	md"Shrink by: $(@bind recursive_n Slider(1:3, show_value=true))"
+end
+
+# ╔═╡ e66ef06a-f392-11ea-30ab-7160e7723a17
+if shrink_recursive
+	recursive_carved[recursive_n]
 end
 
 # ╔═╡ ffc17f40-f380-11ea-30ee-0fe8563c0eb1
