@@ -334,8 +334,6 @@ random_seam(m, n, i) = reduce((a, b) -> [a..., clamp(last(a) + rand(-1:1), 1, n)
 
 # ╔═╡ abf20aa0-f31b-11ea-2548-9bea4fab4c37
 function greedy_seam(energies, starting_pixel::Int)
-	# you can delete the body of this function - it's just a placeholder.
-	
 	nrows = size(energies, 1)
 	seam = Array{Int64, 1}(undef, nrows)
 	pixel = starting_pixel
@@ -422,13 +420,21 @@ Return these two values in a tuple.
 # ╔═╡ 8ec27ef8-f320-11ea-2573-c97b7b908cb7
 ## returns lowest possible sum energy at pixel (i, j), and the column to jump to in row i+1.
 function least_energy(energies, i, j)
-	# base case
-	# if i == something
-	#    return energies[...] # no need for recursive computation in the base case!
-	# end
-	#
-	# induction
-	# combine results from recursive calls to `least_energy`.
+	
+	if i == size(energies, 1)
+		return energies[i, j], j
+	end
+		
+	left = clamp(j - 1, 1, size(energies, 2))
+	right =  clamp(j + 1, 1, size(energies, 2))
+	
+	next = least_energy.((energies,), i + 1, left:right)
+	next_energies = [candidate[1] for candidate in next]
+		
+	which = argmin(next_energies)
+		
+	return energies[i, j] + next_energies[which], left + which - 1
+	
 end
 
 # ╔═╡ a7f3d9f8-f3bb-11ea-0c1a-55bbb8408f09
@@ -466,8 +472,17 @@ This will give you the method used in the lecture to perform [exhaustive search 
 # ╔═╡ 85033040-f372-11ea-2c31-bb3147de3c0d
 function recursive_seam(energies, starting_pixel)
 	m, n = size(energies)
-	# Replace the following line with your code.
-	[rand(1:starting_pixel) for i=1:m]
+	
+	seam = Array{Int64, 1}(undef, m)
+	pixel = starting_pixel
+	
+	for i in 1:m
+		seam[i] = pixel
+		energy, next = least_energy(energies, i, pixel)
+		
+		pixel = next
+	end
+	seam
 end
 
 # ╔═╡ 1d55333c-f393-11ea-229a-5b1e9cabea6a
@@ -483,7 +498,9 @@ md"""
 
 # ╔═╡ 6d993a5c-f373-11ea-0dde-c94e3bbd1552
 exhaustive_observation = md"""
-<your answer here>
+It calls least_energy a million times
+
+Complexity is something like $O(m^2)$
 """
 
 # ╔═╡ ea417c2a-f373-11ea-3bb0-b1b5754f2fac
@@ -518,10 +535,35 @@ You are expected to read and understand the [documentation on dictionaries](http
 
 # ╔═╡ b1d09bc8-f320-11ea-26bb-0101c9a204e2
 function memoized_least_energy(energies, i, j, memory)
-	m, n = size(energies)
 	
-	# Replace the following line with your code.
-	[starting_pixel for i=1:m]
+	if haskey(memory, (i, j))
+		return memory[(i, j)]
+	end
+	
+	if i == size(energies, 1)
+		memory[(i, j)] = energies[i, j]
+		return memory[(i, j)]
+	end
+		
+	left = clamp(j - 1, 1, size(energies, 2))
+	right =  clamp(j + 1, 1, size(energies, 2))
+	
+	next_energies = similar(left:right, Float64)
+	
+	for j_cand in left:right
+		energy, memory = memoized_least_energy(energies, i + 1 , j_cand, memory)
+		next_energies[j_cand - left + 1] = energy
+	end
+	
+	
+
+	which = argmin(next_energies)
+	memory[(i, j)] = energies[i, j] + next_energies[which]
+	
+	return memory[(i, j)], memory
+	
+	
+	
 end
 
 # ╔═╡ 3e8b0868-f3bd-11ea-0c15-011bbd6ac051
@@ -530,8 +572,19 @@ function recursive_memoized_seam(energies, starting_pixel)
 	                                         # pass this every time you call memoized_least_energy.
 	m, n = size(energies)
 	
-	# Replace the following line with your code.
-	[rand(1:starting_pixel) for i=1:m]
+	seam = Array{Int64, 1}(undef, m)
+	j = starting_pixel
+	
+	for i in 1:m
+		seam[i] = j
+		
+		left = clamp(j - 1, 1, size(energies, 2))
+		right =  clamp(j + 1, 1, size(energies, 2))
+		
+		candidates = [memoized_least_energy(energies, i + 1 , j_cand, memory) for j_cand in left:right]
+		pixel = argmin(candidates) + left
+	end
+	seam
 end
 
 # ╔═╡ 4e3bcf88-f3c5-11ea-3ada-2ff9213647b7
@@ -552,8 +605,32 @@ Write a variation of `matrix_memoized_least_energy` and `matrix_memoized_seam` w
 function matrix_memoized_least_energy(energies, i, j, memory)
 	m, n = size(energies)
 	
-	# Replace the following line with your code.
-	[starting_pixel for i=1:m]
+	if memory[i, j] != 0.0 # empty cell
+		return memory[i, j], memory
+	end
+	
+	if i == m
+		memory[i, j] = energies[i, j]
+		return memory[i, j], memory
+	end
+	
+	left = clamp(j - 1, 1, size(energies, 2))
+	right =  clamp(j + 1, 1, size(energies, 2))
+	
+	next_energies = []
+	
+	for candidate in left:right
+		energy, memory = matrix_memoized_least_energy(energies, i + 1, candidate, memory)
+		memory[i + 1, candidate] = energy
+		push!(next_energies, energy)
+	end
+	
+	which = argmin(next_energies)
+	
+	memory[i, j] = energies[i, j] + memory[i + 1, left + which - 1]
+	return memory[i, j], memory
+	
+	
 end
 
 # ╔═╡ be7d40e2-f320-11ea-1b56-dff2a0a16e8d
@@ -561,8 +638,29 @@ function matrix_memoized_seam(energies, starting_pixel)
 	memory = zeros(size(energies)) # use this as storage -- intially it's all zeros
 	m, n = size(energies)
 	
-	# Replace the following line with your code.
-	[starting_pixel for i=1:m]
+	seam = Array{Int64, 1}(undef, m)
+	j = starting_pixel
+	seam[1] = j
+	
+	for i in 2:m
+		
+		#@show i
+		left = clamp(j - 1, 1, size(energies, 2))
+		right =  clamp(j + 1, 1, size(energies, 2))
+		
+		next_energies = []
+		
+		for j_cand in left:right
+			
+			e, memory = matrix_memoized_least_energy(energies, i , j_cand, memory)
+			push!(next_energies, e)
+		end
+			
+		j = argmin(next_energies) + left - 1
+		seam[i] = j
+				
+	end
+	seam
 end
 
 # ╔═╡ 507f3870-f3c5-11ea-11f6-ada3bb087634
@@ -580,8 +678,24 @@ Now it's easy to see that the above algorithm is equivalent to one that populate
 """
 
 # ╔═╡ ff055726-f320-11ea-32f6-2bf38d7dd310
-function least_energy_matrix(energies)
-	copy(energies)
+function least_energy_matrix(energies) :: Array{Float64,2}
+	m, n = size(energies)
+	result = copy(energies)
+	for i in (m - 1):-1:1, j in 1:n
+		left = clamp(j - 1, 1, n)
+		right = clamp(j + 1, 1, n)
+		
+		best = min(result[i + 1, left:right]...)
+		result[i,j] = result[i,j] + best
+	end
+	result
+	
+end
+
+# ╔═╡ b21a66dc-33e3-11eb-14e6-c3407c9ac26f
+begin
+	least_e = least_energy_matrix(brightness.(img))
+	Gray.(least_e ./ max(least_e...))
 end
 
 # ╔═╡ 92e19f22-f37b-11ea-25f7-e321337e375e
@@ -596,8 +710,20 @@ function seam_from_precomputed_least_energy(energies, starting_pixel::Int)
 	least_energies = least_energy_matrix(energies)
 	m, n = size(least_energies)
 	
-	# Replace the following line with your code.
-	[starting_pixel for i=1:m]
+	seam = Array{Int64, 1}(undef, m)
+	seam[1] = starting_pixel
+	
+	for i in 2:m
+		
+		left = clamp(seam[i - 1] - 1, 1, n)
+		right = clamp(seam[i - 1] + 1, 1, n)
+		
+		seam[i] = argmin(least_energies[i, left:right]) + left - 1
+			
+		
+	end
+		
+	seam
 end
 
 # ╔═╡ 51df0c98-f3c5-11ea-25b8-af41dc182bac
@@ -658,39 +784,6 @@ if shrink_greedy
 	greedy_carved[greedy_n]
 end
 
-# ╔═╡ 4e3ef866-f3c5-11ea-3fb0-27d1ca9a9a3f
-if shrink_dict
-	dict_carved = shrink_n(img, 200, recursive_memoized_seam)
-	md"Shrink by: $(@bind dict_n Slider(1:200, show_value=true))"
-end
-
-# ╔═╡ 6e73b1da-f3c5-11ea-145f-6383effe8a89
-if shrink_dict
-	dict_carved[dict_n]
-end
-
-# ╔═╡ 50829af6-f3c5-11ea-04a8-0535edd3b0aa
-if shrink_matrix
-	matrix_carved = shrink_n(img, 200, matrix_memoized_seam)
-	md"Shrink by: $(@bind matrix_n Slider(1:200, show_value=true))"
-end
-
-# ╔═╡ 9e56ecfa-f3c5-11ea-2e90-3b1839d12038
-if shrink_matrix
-	matrix_carved[matrix_n]
-end
-
-# ╔═╡ 51e28596-f3c5-11ea-2237-2b72bbfaa001
-if shrink_bottomup
-	bottomup_carved = shrink_n(img, 200, seam_from_precomputed_least_energy)
-	md"Shrink by: $(@bind bottomup_n Slider(1:200, show_value=true))"
-end
-
-# ╔═╡ 0a10acd8-f3c6-11ea-3e2f-7530a0af8c7f
-if shrink_bottomup
-	bottomup_carved[bottomup_n]
-end
-
 # ╔═╡ ef26374a-f388-11ea-0b4e-67314a9a9094
 function pencil(X)
 	f(x) = RGB(1-x,1-x,1-x)
@@ -725,6 +818,59 @@ end
 # ╔═╡ e66ef06a-f392-11ea-30ab-7160e7723a17
 if shrink_recursive
 	recursive_carved[recursive_n]
+end
+
+# ╔═╡ f057777c-33d5-11eb-0a38-e71b74051153
+begin
+	energies = energy(pika)
+	energies
+end
+
+# ╔═╡ 35a53772-33d6-11eb-19eb-258bf32e11a3
+begin
+	memothing = zeros(size(energies))
+	
+	for j in 1:size(energies, 2)
+		e, memory = matrix_memoized_least_energy(energies, 1, j, memothing)
+	end
+	Gray.(memothing)
+end
+
+# ╔═╡ 4e3ef866-f3c5-11ea-3fb0-27d1ca9a9a3f
+if shrink_dict
+	shrink_n(decimate(img, 5), 200 ÷ 5, recursive_memoized_seam)
+	md"Shrink by: $(@bind dict_n Slider(1:3, show_value=true))"
+end
+
+# ╔═╡ 6e73b1da-f3c5-11ea-145f-6383effe8a89
+if shrink_dict
+	dict_carved[dict_n]
+end
+
+# ╔═╡ 50829af6-f3c5-11ea-04a8-0535edd3b0aa
+if shrink_matrix
+	small = decimate(img, 2)
+	matrix_carved = shrink_n(small, 100, matrix_memoized_seam)
+	md"Shrink by: $(@bind matrix_n Slider(1:100, show_value=true))"
+end
+
+# ╔═╡ 9e56ecfa-f3c5-11ea-2e90-3b1839d12038
+if shrink_matrix
+	matrix_carved[matrix_n]
+end
+
+# ╔═╡ 51e28596-f3c5-11ea-2237-2b72bbfaa001
+if shrink_bottomup
+	factor = 1
+	this_small = decimate(img, factor)
+	bottomup_carved = shrink_n(this_small, 200 / factor, seam_from_precomputed_least_energy) 
+	
+	md"Shrink by: $(@bind bottomup_n Slider(1: 200 ÷ factor, show_value=true))"
+end
+
+# ╔═╡ 0a10acd8-f3c6-11ea-3e2f-7530a0af8c7f
+if shrink_bottomup
+	bottomup_carved[bottomup_n]
 end
 
 # ╔═╡ ffc17f40-f380-11ea-30ee-0fe8563c0eb1
@@ -929,12 +1075,12 @@ bigbreak
 # ╟─cbf29020-f3ba-11ea-2cb0-b92836f3d04b
 # ╟─8bc930f0-f372-11ea-06cb-79ced2834720
 # ╠═85033040-f372-11ea-2c31-bb3147de3c0d
-# ╠═1d55333c-f393-11ea-229a-5b1e9cabea6a
+# ╟─1d55333c-f393-11ea-229a-5b1e9cabea6a
 # ╠═d88bc272-f392-11ea-0efd-15e0e2b2cd4e
 # ╠═e66ef06a-f392-11ea-30ab-7160e7723a17
 # ╟─c572f6ce-f372-11ea-3c9a-e3a21384edca
 # ╠═6d993a5c-f373-11ea-0dde-c94e3bbd1552
-# ╠═ea417c2a-f373-11ea-3bb0-b1b5754f2fac
+# ╟─ea417c2a-f373-11ea-3bb0-b1b5754f2fac
 # ╟─56a7f954-f374-11ea-0391-f79b75195f4d
 # ╠═b1d09bc8-f320-11ea-26bb-0101c9a204e2
 # ╠═3e8b0868-f3bd-11ea-0c15-011bbd6ac051
@@ -943,6 +1089,8 @@ bigbreak
 # ╠═6e73b1da-f3c5-11ea-145f-6383effe8a89
 # ╟─cf39fa2a-f374-11ea-0680-55817de1b837
 # ╠═c8724b5e-f3bd-11ea-0034-b92af21ca12d
+# ╠═f057777c-33d5-11eb-0a38-e71b74051153
+# ╠═35a53772-33d6-11eb-19eb-258bf32e11a3
 # ╠═be7d40e2-f320-11ea-1b56-dff2a0a16e8d
 # ╟─507f3870-f3c5-11ea-11f6-ada3bb087634
 # ╠═50829af6-f3c5-11ea-04a8-0535edd3b0aa
@@ -950,6 +1098,7 @@ bigbreak
 # ╟─4f48c8b8-f39d-11ea-25d2-1fab031a514f
 # ╟─24792456-f37b-11ea-07b2-4f4c8caea633
 # ╠═ff055726-f320-11ea-32f6-2bf38d7dd310
+# ╠═b21a66dc-33e3-11eb-14e6-c3407c9ac26f
 # ╟─e0622780-f3b4-11ea-1f44-59fb9c5d2ebd
 # ╟─92e19f22-f37b-11ea-25f7-e321337e375e
 # ╠═795eb2c4-f37b-11ea-01e1-1dbac3c80c13

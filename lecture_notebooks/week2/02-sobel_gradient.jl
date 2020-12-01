@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.11.10
+# v0.12.10
 
 using Markdown
 using InteractiveUtils
@@ -39,9 +39,6 @@ begin
 	using ImageMagick
 	using ImageFiltering
 end
-
-# ╔═╡ 1ab1c808-f0d1-11ea-03a7-e9854427d45f
-
 
 # ╔═╡ 10f850fc-f0d1-11ea-2a58-2326a9ea1e2a
 set_default_plot_size(12cm, 12cm)
@@ -236,7 +233,6 @@ end
 
 # ╔═╡ Cell order:
 # ╠═15a4ba3e-f0d1-11ea-2ef1-5ff1dee8795f
-# ╠═1ab1c808-f0d1-11ea-03a7-e9854427d45f
 # ╟─21e744b8-f0d1-11ea-2e09-7ffbcdf43c37
 # ╠═10f850fc-f0d1-11ea-2a58-2326a9ea1e2a
 # ╟─7b4d5270-f0d3-11ea-0b48-79005f20602c
