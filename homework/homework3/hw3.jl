@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.11
+# v0.12.15
 
 using Markdown
 using InteractiveUtils
@@ -25,12 +25,14 @@ begin
 			"Compose",
 			"Colors",
 			"PlutoUI",
+			"Pipe"
 			])
 
 	using Colors
 	using PlutoUI
 	using Compose
 	using LinearAlgebra
+	using Pipe
 end
 
 # ╔═╡ e6b6760a-f37f-11ea-3ae1-65443ef5a81a
@@ -52,7 +54,7 @@ Feel free to ask questions!
 # ╔═╡ 33e43c7c-f381-11ea-3abc-c942327456b1
 # edit the code below to set your name and kerberos ID (i.e. email without @mit.edu)
 
-student = (name = "Jazzy Doe", kerberos_id = "jazz")
+student = (name = "matty mat", kerberos_id = "yaybaby")
 
 # you might need to wait until all other cells in this notebook have completed running. 
 # scroll around the page to see what's up
@@ -62,6 +64,9 @@ md"""
 
 Submission by: **_$(student.name)_** ($(student.kerberos_id)@mit.edu)
 """
+
+# ╔═╡ 07e65216-3e24-11eb-3345-f15cfda91243
+
 
 # ╔═╡ 938185ec-f384-11ea-21dc-b56b7469f798
 md"_Let's create a package environment:_"
@@ -149,7 +154,7 @@ md"👉 Use `filter` to extract just the characters from our alphabet out of `me
 messy_sentence_1 = "#wow 2020 ¥500 (blingbling!)"
 
 # ╔═╡ 75694166-f998-11ea-0428-c96e1113e2a0
-cleaned_sentence_1 = missing
+cleaned_sentence_1 = filter(isinalphabet, messy_sentence_1)
 
 # ╔═╡ 05f0182c-f999-11ea-0a52-3d46c65a049e
 md"""
@@ -165,7 +170,9 @@ md"👉 Use the function `lowercase` to convert `messy_sentence_2` into a lower 
 messy_sentence_2 = "Awesome! 😍"
 
 # ╔═╡ d3a4820e-f998-11ea-2a5c-1f37e2a6dd0a
-cleaned_sentence_2 = missing
+begin
+	cleaned_sentence_2 = filter(isinalphabet, lowercase(messy_sentence_2))
+end
 
 # ╔═╡ aad659b8-f998-11ea-153e-3dae9514bfeb
 md"""
@@ -215,8 +222,7 @@ $(html"<br>")
 
 # ╔═╡ 4affa858-f92e-11ea-3ece-258897c37e51
 function clean(text)
-	# we turn everything to lowercase to keep the number of letters small
-	missing
+	@pipe text |> unaccent |> lowercase |> filter(isinalphabet, _)
 end
 
 # ╔═╡ e00d521a-f992-11ea-11e0-e9da8255b23b
@@ -259,9 +265,7 @@ $(html"<br>")
 """
 
 # ╔═╡ 92bf9fd2-f9a5-11ea-25c7-5966e44db6c6
-unused_letters = let
-	['a', 'b']
-end
+unused_letters = alphabet[sample_freqs .== 0.0]
 
 # ╔═╡ 01215e9a-f9a9-11ea-363b-67392741c8d4
 md"""
@@ -328,13 +332,13 @@ end
 md"""👉 What is the frequency of the combination `"th"`?"""
 
 # ╔═╡ 1b4c0c28-f9ab-11ea-03a6-69f69f7f90ed
-th_frequency = missing
+th_frequency = sample_freq_matrix[index_of_letter('t'), index_of_letter('h')]
 
 # ╔═╡ 1f94e0a2-f9ab-11ea-1347-7dd906ebb09d
 md"""👉 What about `"ht"`?"""
 
 # ╔═╡ 41b2df7c-f931-11ea-112e-ede3b16f357a
-ht_frequency = missing
+ht_frequency = sample_freq_matrix[index_of_letter('h'), index_of_letter('t')]
 
 # ╔═╡ 1dd1e2f4-f930-11ea-312c-5ff9e109c7f6
 md"""
@@ -342,7 +346,7 @@ md"""
 """
 
 # ╔═╡ 65c92cac-f930-11ea-20b1-6b8f45b3f262
-double_letters = ['x', 'y']
+double_letters = alphabet[[i for i in 1:size(sample_freq_matrix)[1] if sample_freq_matrix[i, i] > 0.0]]
 
 # ╔═╡ 4582ebf4-f930-11ea-03b2-bf4da1a8f8df
 md"""
@@ -350,7 +354,7 @@ md"""
 """
 
 # ╔═╡ 7898b76a-f930-11ea-2b7e-8126ec2b8ffd
-most_likely_to_follow_w = 'x'
+most_likely_to_follow_w = alphabet[argmax(sample_freq_matrix[index_of_letter('w'), :])]
 
 # ╔═╡ 458cd100-f930-11ea-24b8-41a49f6596a0
 md"""
@@ -358,7 +362,7 @@ md"""
 """
 
 # ╔═╡ bc401bee-f931-11ea-09cc-c5efe2f11194
-most_likely_to_precede_w = 'x'
+most_likely_to_precede_w = alphabet[argmax(sample_freq_matrix[:, index_of_letter('w')])]
 
 # ╔═╡ 45c20988-f930-11ea-1d12-b782d2c01c11
 md"""
@@ -367,6 +371,7 @@ md"""
 
 # ╔═╡ cc62929e-f9af-11ea-06b9-439ac08dcb52
 row_col_answer = md"""
+Should be 1.0 for both
 
 """
 
@@ -452,7 +457,7 @@ The only question left is: How do we compare two matrices? When two matrices are
 
 # ╔═╡ 13c89272-f934-11ea-07fe-91b5d56dedf8
 function matrix_distance(A, B)
-	missing # do something with A .- B
+	abs.(A .- B) |> sum
 end
 
 # ╔═╡ 7d60f056-f931-11ea-39ae-5fa18a955a77
@@ -568,7 +573,9 @@ ngrams([1, 2, 3, 42], 2) == bigrams([1, 2, 3, 42])
 
 # ╔═╡ 7be98e04-fb6b-11ea-111d-51c48f39a4e9
 function ngrams(words, n)
-	missing
+	map(1:length(words)-(n-1)) do i
+		words[i:i+n-1]
+	end
 end
 
 # ╔═╡ 052f822c-fb7b-11ea-382f-af4d6c2b4fdb
@@ -638,8 +645,15 @@ Dict(
 function word_counts(words::Vector)
 	counts = Dict()
 	
-	# your code here
-	
+	for word in words
+		
+		if haskey(counts, word)
+			counts[word] += 1
+		else
+			counts[word] = 1
+		end
+	end
+		
 	return counts
 end
 
@@ -652,7 +666,7 @@ How many times does `"Emma"` occur in the book?
 """
 
 # ╔═╡ 953363dc-fb84-11ea-1128-ebdfaf5160ee
-emma_count = missing
+emma_count = word_counts(emma_words)["Emma"]
 
 # ╔═╡ 294b6f50-fb84-11ea-1382-03e9ab029a2d
 md"""
@@ -682,7 +696,17 @@ If the same ngram occurs multiple times (e.g. "said Emma laughing"), then the la
 function completions_cache(grams)
 	cache = Dict()
 	
-	# your code here
+	for ngram in grams
+		
+		key = ngram[1:end-1]
+		
+		if haskey(cache, key)
+			push!(cache[key], ngram[end])
+		else
+			cache[key] = [ngram[end]]
+		end
+	end
+		
 	
 	cache
 end
@@ -787,9 +811,6 @@ md"""
 Uncomment the cell below to generate some Jane Austen text:
 """
 
-# ╔═╡ 49b69dc2-fb8f-11ea-39af-030b5c5053c3
-# generate(emma, 100; n=4) |> Quote
-
 # ╔═╡ cc07f576-fbf3-11ea-2c6f-0be63b9356fc
 if student.name == "Jazzy Doe"
 	md"""
@@ -838,6 +859,9 @@ generate(
 	n=generate_sample_n_words, 
 	use_words=true
 ) |> Quote
+
+# ╔═╡ 49b69dc2-fb8f-11ea-39af-030b5c5053c3
+generate(emma, 100; n=4) |> Quote
 
 # ╔═╡ ddef9c94-fb96-11ea-1f17-f173a4ff4d89
 function compimg(img, labels=[c*d for c in replace(alphabet, ' ' => "_"), d in replace(alphabet, ' ' => "_")])
@@ -1135,6 +1159,7 @@ bigbreak
 # ╟─ec66314e-f37f-11ea-0af4-31da0584e881
 # ╟─85cfbd10-f384-11ea-31dc-b5693630a4c5
 # ╠═33e43c7c-f381-11ea-3abc-c942327456b1
+# ╠═07e65216-3e24-11eb-3345-f15cfda91243
 # ╟─938185ec-f384-11ea-21dc-b56b7469f798
 # ╠═86e1ee96-f314-11ea-03f6-0f549b79e7c9
 # ╠═a4937996-f314-11ea-2ff9-615c888afaa8
@@ -1209,7 +1234,7 @@ bigbreak
 # ╠═65c92cac-f930-11ea-20b1-6b8f45b3f262
 # ╟─671525cc-f930-11ea-0e71-df9d4aae1c05
 # ╟─4582ebf4-f930-11ea-03b2-bf4da1a8f8df
-# ╟─7898b76a-f930-11ea-2b7e-8126ec2b8ffd
+# ╠═7898b76a-f930-11ea-2b7e-8126ec2b8ffd
 # ╟─a5fbba46-f931-11ea-33e1-054be53d986c
 # ╟─458cd100-f930-11ea-24b8-41a49f6596a0
 # ╠═bc401bee-f931-11ea-09cc-c5efe2f11194
@@ -1242,8 +1267,8 @@ bigbreak
 # ╟─568f0d3a-fb54-11ea-0f77-171718ef12a5
 # ╟─82e0df62-fb54-11ea-3fff-b16c87a7d45b
 # ╠═b7601048-fb57-11ea-0754-97dc4e0623a1
-# ╟─cc42de82-fb5a-11ea-3614-25ef961729ab
-# ╠═d66fe2b2-fb5a-11ea-280f-cfb12b8296ac
+# ╠═cc42de82-fb5a-11ea-3614-25ef961729ab
+# ╟─d66fe2b2-fb5a-11ea-280f-cfb12b8296ac
 # ╠═4ca8e04a-fb75-11ea-08cc-2fdef5b31944
 # ╟─6f613cd2-fb5b-11ea-1669-cbd355677649
 # ╠═91e87974-fb78-11ea-3ce4-5f64e506b9d2
