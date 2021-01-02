@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.3
+# v0.12.15
 
 using Markdown
 using InteractiveUtils
@@ -13,14 +13,10 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 2b37ca3a-0970-11eb-3c3d-4f788b411d1a
-begin
-	using Pkg
-	Pkg.activate(mktempdir())
-end
-
 # ╔═╡ 2dcb18d0-0970-11eb-048a-c1734c6db842
 begin
+		import Pkg
+
 	Pkg.add(["PlutoUI", "Plots"])
 
 	using Plots
@@ -119,7 +115,10 @@ We define a struct type `Coordinate` that contains integers `x` and `y`.
 """
 
 # ╔═╡ 0ebd35c8-0972-11eb-2e67-698fd2d311d2
-
+struct Coordinate
+	x :: Int64
+	y :: Int64
+end
 
 # ╔═╡ 027a5f48-0a44-11eb-1fbf-a94d02d0b8e3
 md"""
@@ -135,9 +134,9 @@ md"""
 """
 
 # ╔═╡ 189bafac-0972-11eb-1893-094691b2073c
-# function make_tuple(c)
-# 	missing
-# end
+function make_tuple(c)
+ 	c.x, c.y
+end
 
 # ╔═╡ 73ed1384-0a29-11eb-06bd-d3c441b8a5fc
 md"""
@@ -179,13 +178,12 @@ md"""
 """
 
 # ╔═╡ e24d5796-0a68-11eb-23bb-d55d206f3c40
-# function Base.:+(a::TYPE, b::TYPE)
-	
-# 	return missing
-# end
+function Base.:+(a::Coordinate, b::Coordinate)
+	Coordinate(a.x + b.x, a.y + b.y)
+end
 
 # ╔═╡ ec8e4daa-0a2c-11eb-20e1-c5957e1feba3
-# Coordinate(3,4) + Coordinate(10,10) # uncomment to check + works
+Coordinate(3,4) + Coordinate(10,10) # uncomment to check + works
 
 # ╔═╡ e144e9d0-0a2d-11eb-016e-0b79eba4b2bb
 md"""
@@ -199,14 +197,11 @@ In our model, agents will be able to walk in 4 directions: up, down, left and ri
 """
 
 # ╔═╡ 5278e232-0972-11eb-19ff-a1a195127297
-# uncomment this:
-
-# possible_moves = [
-# 	Coordinate( 1, 0), 
-# 	Coordinate( 0, 1), 
-# 	Coordinate(-1, 0), 
-# 	Coordinate( 0,-1),
-# ]
+possible_moves = [
+ 	Coordinate( 1, 0), 
+ 	Coordinate( 0, 1), 
+ 	Coordinate(-1, 0), 
+ 	Coordinate( 0,-1)]
 
 # ╔═╡ 71c9788c-0aeb-11eb-28d2-8dcc3f6abacd
 md"""
@@ -214,7 +209,7 @@ md"""
 """
 
 # ╔═╡ 69151ce6-0aeb-11eb-3a53-290ba46add96
-
+Coordinate(4,5) + rand(possible_moves)
 
 # ╔═╡ 3eb46664-0954-11eb-31d8-d9c0b74cf62b
 md"""
@@ -231,13 +226,11 @@ Possible steps:
 """
 
 # ╔═╡ edf86a0e-0a68-11eb-2ad3-dbf020037019
-# function trajectory(w::Coordinate, n::Int)
+function trajectory(w::Coordinate, n::Int)
+	moves = rand(possible_moves, n)
 	
-# 	return missing
-# end
-
-# ╔═╡ 44107808-096c-11eb-013f-7b79a90aaac8
-# test_trajectory = trajectory(Coordinate(4,4), 30) # uncomment to test
+	accumulate(+, moves, init = w)
+end
 
 # ╔═╡ 478309f4-0a31-11eb-08ea-ade1755f53e0
 function plot_trajectory!(p::Plots.Plot, trajectory::Vector; kwargs...)
@@ -247,25 +240,6 @@ function plot_trajectory!(p::Plots.Plot, trajectory::Vector; kwargs...)
 		linealpha=LinRange(1.0, 0.2, length(trajectory)),
 		kwargs...)
 end
-
-# ╔═╡ 87ea0868-0a35-11eb-0ea8-63e27d8eda6e
-try
-	p = plot(ratio=1, size=(650,200))
-	plot_trajectory!(p, test_trajectory; color="black", showaxis=false, axis=nothing, linewidth=4)
-	p
-catch
-end
-
-# ╔═╡ 51788e8e-0a31-11eb-027e-fd9b0dc716b5
-# 	let
-# 		long_trajectory = trajectory(Coordinate(4,4), 1000)
-
-# 		p = plot(ratio=1)
-# 		plot_trajectory!(p, long_trajectory)
-# 		p
-# 	end
-
-# ^ uncomment to visualize a trajectory
 
 # ╔═╡ 3ebd436c-0954-11eb-170d-1d468e2c7a37
 md"""
@@ -288,9 +262,6 @@ end
 ```
 """
 
-# ╔═╡ dcefc6fe-0a3f-11eb-2a96-ddf9c0891873
-
-
 # ╔═╡ b4d5da4a-09a0-11eb-1949-a5807c11c76c
 md"""
 #### Exercise 1.5
@@ -304,13 +275,16 @@ One relatively simple boundary condition is a **collision boundary**:
 """
 
 # ╔═╡ 0237ebac-0a69-11eb-2272-35ea4e845d84
-# function collide_boundary(c::Coordinate, L::Number)
+function collide_boundary(c::Coordinate, L::Number)
+
+	x = max(-L, min(L, c.x))
+	y = max(-L, min(L, c.y))
 	
-# 	return missing
-# end
+	Coordinate(x, y)
+end
 
 # ╔═╡ ad832360-0a40-11eb-2857-e7f0350f3b12
-# collide_boundary(Coordinate(12,4), 10) # uncomment to test
+collide_boundary(Coordinate(12,4), 10)
 
 # ╔═╡ b4ed2362-09a0-11eb-0be9-99c91623b28f
 md"""
@@ -320,10 +294,42 @@ md"""
 """
 
 # ╔═╡ 0665aa3e-0a69-11eb-2b5d-cd718e3c7432
-# function trajectory(c::Coordinate, n::Int, L::Number)
+function trajectory(c::Coordinate, n::Int, L::Number)
 	
-# 	return missing
-# end
+	accumulate(x,y -> collide_boundary(x + y, L), moves, init = w)
+end
+
+# ╔═╡ 44107808-096c-11eb-013f-7b79a90aaac8
+test_trajectory = trajectory(Coordinate(4,4), 30) # uncomment to test
+
+# ╔═╡ 87ea0868-0a35-11eb-0ea8-63e27d8eda6e
+try
+	p = plot(ratio=1, size=(650,200))
+	plot_trajectory!(p, test_trajectory; color="black", showaxis=false, axis=nothing, linewidth=4)
+	p
+catch
+end
+
+# ╔═╡ 51788e8e-0a31-11eb-027e-fd9b0dc716b5
+let
+ 		long_trajectory = trajectory(Coordinate(4,4), 1000)
+
+ 		p = plot(ratio=1)
+ 		plot_trajectory!(p, long_trajectory)
+ 		p
+ 	end
+
+# ╔═╡ dcefc6fe-0a3f-11eb-2a96-ddf9c0891873
+let
+    # Create a new plot with aspect ratio 1:1
+    p = plot(ratio=1)
+
+	for _ in 1:10
+    	plot_trajectory!(p,trajectory(Coordinate(4,4), 1000))
+	end
+	
+    p
+end
 
 # ╔═╡ 3ed06c80-0954-11eb-3aee-69e4ccdc4f9d
 md"""
@@ -340,7 +346,15 @@ Let's define a type `Agent`. `Agent` contains a `position` (of type `Coordinate`
 @enum InfectionStatus S I R
 
 # ╔═╡ cf2f3b98-09a0-11eb-032a-49cc8c15e89c
-# define agent struct here:
+begin 
+	abstract type AbstractAgent end
+	
+	mutable struct Agent <: AbstractAgent
+		status::InfectionStatus
+		position::Coordinate
+		num_infected::Int64
+	end
+end
 
 # ╔═╡ 814e888a-0954-11eb-02e5-0964c7410d30
 md"""
@@ -351,13 +365,23 @@ It returns a `Vector` of `N` randomly generated `Agent`s. Their coordinates are 
 """
 
 # ╔═╡ 0cfae7ba-0a69-11eb-3690-d973d70e47f4
-# function initialize(N::Number, L::Number)
+function initialize(N::Number, L::Number)
 	
-# 	return missing
-# end
+	agents :: Array{Agent}= []
+	for _ in 1:N
+		position = Coordinate(rand(-L:L), rand(-L:L))
+		
+		push!(agents, Agent(S, position, 0))
+	end
+		
+	agents[rand(1:length(agents) - 1)].status = I
+	
+	agents
+
+end
 
 # ╔═╡ 1d0f8eb4-0a46-11eb-38e7-63ecbadbfa20
-# initialize(3, 10)
+initialize(3, 10)
 
 # ╔═╡ e0b0880c-0a47-11eb-0db2-f760bbbf9c11
 # Color based on infection status
@@ -370,10 +394,10 @@ else
 end
 
 # ╔═╡ b5a88504-0a47-11eb-0eda-f125d419e909
-# position(a::Agent) = a.position # uncomment this line
+position(a::Agent) = a.position # uncomment this line
 
 # ╔═╡ 87a4cdaa-0a5a-11eb-2a5e-cfaf30e942ca
-# color(a::Agent) = color(a.status) # uncomment this line
+color(a::Agent) = color(a.status) # uncomment this line
 
 # ╔═╡ 49fa8092-0a43-11eb-0ba9-65785ac6a42f
 md"""
@@ -382,19 +406,6 @@ md"""
 
 You can use the keyword argument `c=color.(agents)` inside your call to the plotting function make the point colors correspond to the infection statuses. Don't forget to use `ratio=1`.
 """
-
-# ╔═╡ 1ccc961e-0a69-11eb-392b-915be07ef38d
-# function visualize(agents::Vector, L)
-	
-# 	return missing
-# end
-
-# ╔═╡ 1f96c80a-0a46-11eb-0690-f51c60e57c3f
-let
-	N = 20
-	L = 10
-#	visualize(initialize(N, L), L) # uncomment this line!
-end
 
 # ╔═╡ f953e06e-099f-11eb-3549-73f59fed8132
 md"""
@@ -425,9 +436,38 @@ Write a function `interact!` that takes two `Agent`s and a `CollisionInfectionRe
 """
 
 # ╔═╡ d1bcd5c4-0a4b-11eb-1218-7531e367a7ff
-#function interact!(agent::Agent, source::Agent, infection::CollisionInfectionRecovery)
-	#missing
-#end
+begin
+	function is_susceptible(agent::Agent)
+	
+		return agent.status == S
+	end
+	function is_infected(agent::Agent)
+	
+		return agent.status == I
+	end
+	
+	function set_status!(agent::Agent, new_status::InfectionStatus)
+	agent.status = new_status
+end
+	function set_num_infected!(agent::Agent, num_infected::Int64)
+	agent.num_infected = num_infected
+end
+	function interact!(agent::Agent, source::Agent, infection::CollisionInfectionRecovery)
+
+		if is_susceptible(agent) & 
+			is_infected(source) & 
+			(source.position == agent.position) &
+			(rand() < infection.p_infection)
+			
+			set_status!(agent, I)
+			set_num_infected!(source, source.num_infected + 1)
+			
+		elseif is_infected(agent) & (rand() < infection.p_recovery)
+			set_status!(agent, R)
+		end
+
+	end
+end
 
 # ╔═╡ 34778744-0a5f-11eb-22b6-abe8b8fc34fd
 md"""
@@ -444,12 +484,6 @@ Your turn!
 
 - return the array `agents` again.
 """
-
-# ╔═╡ 24fe0f1a-0a69-11eb-29fe-5fb6cbf281b8
-# function step!(agents::Vector, L::Number, infection::AbstractInfection)
-	
-# 	return missing
-# end
 
 # ╔═╡ 1fc3271e-0a45-11eb-0e8d-0fd355f5846b
 md"""
@@ -474,17 +508,6 @@ pandemic = CollisionInfectionRecovery(0.5, 0.00001)
 # ╔═╡ 4e7fd58a-0a62-11eb-1596-c717e0845bd5
 @bind k_sweeps Slider(1:10000, default=1000)
 
-# ╔═╡ 778c2490-0a62-11eb-2a6c-e7fab01c6822
-# let
-# 	N = 50
-# 	L = 40
-	
-# 	plot_before = plot(1:3) # replace with your code
-# 	plot_after = plot(1:3)
-	
-# 	plot(plot_before, plot_after)
-# end
-
 # ╔═╡ e964c7f0-0a61-11eb-1782-0b728fab1db0
 md"""
 #### Exercise 3.3
@@ -496,15 +519,6 @@ Every time that you move the slider, a completely new simulation is created an r
 
 # ╔═╡ 4d83dbd0-0a63-11eb-0bdc-757f0e721221
 k_sweep_max = 10000
-
-# ╔═╡ ef27de84-0a63-11eb-177f-2197439374c5
-let
-	N = 50
-	L = 30
-	
-	# agents = initialize(N, L)
-	# compute k_sweep_max number of sweeps and plot the SIR
-end
 
 # ╔═╡ 201a3810-0a45-11eb-0ac9-a90419d0b723
 md"""
@@ -518,14 +532,6 @@ Let's make our plot come alive! There are two options to make our visualization 
 This an optional exercise, and our solution to 2️⃣ is given below.
 """
 
-# ╔═╡ e5040c9e-0a65-11eb-0f45-270ab8161871
-# let
-# 	N = 50
-# 	L = 30
-	
-# 	missing
-# end
-
 # ╔═╡ 2031246c-0a45-11eb-18d3-573f336044bf
 md"""
 #### Exercise 3.5
@@ -537,9 +543,6 @@ causes_outbreak = CollisionInfectionRecovery(0.5, 0.001)
 
 # ╔═╡ 269955e4-0a46-11eb-02cc-1946dc918bfa
 does_not_cause_outbreak = CollisionInfectionRecovery(0.5, 0.001)
-
-# ╔═╡ 4d4548fe-0a66-11eb-375a-9313dc6c423d
-
 
 # ╔═╡ 20477a78-0a45-11eb-39d7-93918212a8bc
 md"""
@@ -569,16 +572,36 @@ We create a new agent type `SocialAgent` with fields `position`, `status`, `num_
 """
 
 # ╔═╡ 1b5e72c6-0a42-11eb-3884-a377c72270c7
-# struct SocialAgent here...
+mutable struct SocialAgent  <: AbstractAgent
+	position::Coordinate
+	status::InfectionStatus
+	num_infected::Int64
+	social_score::Float64	
+end
 
 # ╔═╡ c704ea4c-0aec-11eb-2f2c-859c954aa520
 md"""define the `position` and `color` methods for `SocialAgent` as we did for `Agent`. This will allow the `visualize` function to work. on both kinds of Agents"""
 
 # ╔═╡ e97e39aa-0a5d-11eb-3d5f-f90a0acfe5a2
-# begin
-# 	position(a::SocialAgent) = ...
-# 	color(a::SocialAgent) = ...
-# end
+begin
+	position(a::SocialAgent) = a.position
+ 	color(a::SocialAgent) = color(a.status)
+end
+
+# ╔═╡ 1ccc961e-0a69-11eb-392b-915be07ef38d
+function visualize(agents::Vector, L)
+
+	p = plot(ratio=1, xlims = (-L -1 , L +1 ), ylims = (-L -1 , L +1 ))
+	
+	scatter!(p, make_tuple.(position.(agents)), c=color.(agents))
+end
+
+# ╔═╡ 1f96c80a-0a46-11eb-0690-f51c60e57c3f
+let
+	N = 20
+	L = 10
+	visualize(initialize(N, L), L) # uncomment this line!
+end
 
 # ╔═╡ b554b654-0a41-11eb-0e0d-e57ff68ced33
 md"""
@@ -586,9 +609,21 @@ md"""
 """
 
 # ╔═╡ 40c1c1d6-0a69-11eb-3913-59e9b9ec4332
-# function initialize_social(N, L)
-# 	return missing
-# end
+function initialize_social(N, L)
+	
+	agents :: Array{SocialAgent}= []
+	
+	for _ in 1:N
+		position = Coordinate(rand(-L:L), rand(-L:L))
+		
+		push!(agents, SocialAgent(position, S, 0, rand(.1:.05:.5)))
+	end
+		
+	agents[rand(1:length(agents) - 1)].status = I
+	
+	agents
+
+end
 
 # ╔═╡ 18ac9926-0aed-11eb-034f-e9849b71c9ac
 md"""
@@ -609,9 +644,173 @@ Not all two agents who end up in the same grid point may actually interact in an
 
 # ╔═╡ 465e918a-0a69-11eb-1b59-01150b4b0f36
 # function interact!(agent::SocialAgent, source::SocialAgent, infection::CollisionInfectionRecovery)
+begin
+	function is_susceptible(agent::SocialAgent)
 	
-# 	# your code here
-# end
+		return agent.status == S
+	end
+	function is_infected(agent::SocialAgent)
+	
+		return agent.status == I
+	end
+	
+	function set_status!(agent::SocialAgent, new_status::InfectionStatus)
+	agent.status = new_status
+end
+	function set_num_infected!(agent::SocialAgent, num_infected::Int64)
+	agent.num_infected = num_infected
+end
+	function interact!(agent::SocialAgent, source::SocialAgent, infection::CollisionInfectionRecovery)
+		if is_susceptible(agent) & 
+			is_infected(source) & 
+			(source.position == agent.position) &
+			(rand() < source.social_score + agent.social_score) 
+			(rand() < infection.p_infection)
+			
+			set_status!(agent, I)
+			set_num_infected!(source, source.num_infected + 1)
+			
+		elseif is_infected(agent) & (rand() < infection.p_recovery)
+			set_status!(agent, R)
+		end
+
+	end
+end
+
+# ╔═╡ 24fe0f1a-0a69-11eb-29fe-5fb6cbf281b8
+function step!(agents::Vector{Agent}, L::Int64,  infection::AbstractInfection)
+	
+	source = agents[rand(1:length(agents))]
+	source.position = collide_boundary(source.position + rand(possible_moves), L)
+	
+	for agent in agents
+		if source != agent
+			interact!(agent, source, infection)
+		end
+	end
+	
+end
+
+# ╔═╡ 778c2490-0a62-11eb-2a6c-e7fab01c6822
+let
+ 	N = 50
+ 	L = 40
+	agents = initialize(N, L)
+	infection = CollisionInfectionRecovery(.5, 0.00001)
+	
+ 	plot_before = visualize(agents, L)
+	
+	for sweep in 1:k_sweeps
+		
+		for step in 1:N
+			step!(agents, L,  infection)
+		end
+	end
+	
+ 	plot_after = visualize(agents, L)
+	
+ 	plot(plot_before, plot_after)
+end
+
+# ╔═╡ ef27de84-0a63-11eb-177f-2197439374c5
+let
+	N = 50
+	L = 30
+	
+	agents = initialize(N, L)
+	infection = CollisionInfectionRecovery(.5, 0.00001)
+	
+	ss = []
+	is = []
+	rs = []
+	
+ 	plot_before = visualize(agents, L)
+	
+	for sweep in 1:k_sweep_max
+		
+		for step in 1:N
+			step!(agents, L,  infection)
+		end
+		
+		push!(ss, count( a -> a.status == S, agents))
+		push!(is, count( a -> a.status == I, agents))
+		push!(rs, count( a -> a.status == R, agents))
+			
+			
+	end
+	
+	result = plot(1:k_sweep_max, ss, ylim=(0, N), label="Susceptible")
+	plot!(result, 1:k_sweep_max, is, ylim=(0, N), label="Infectious")
+	plot!(result, 1:k_sweep_max, rs, ylim=(0, N), label="Recovered")
+		
+ 	plot_after = visualize(agents, L)
+	
+ 	plot(result, plot( plot_before, plot_after))
+
+end
+
+# ╔═╡ e5040c9e-0a65-11eb-0f45-270ab8161871
+let
+	N = 50
+	L = 30
+	
+	agents = initialize(N, L)
+	infection = CollisionInfectionRecovery(.5, 0.001)
+	
+	ss = []
+	is = []
+	rs = []
+	
+ 	plot_before = visualize(agents, L)
+	
+	@gif for sweep in 1:k_sweep_max
+		
+		for step in 1:50N
+			step!(agents, L,  infection)
+		end
+		
+		push!(ss, count( a -> a.status == S, agents))
+		push!(is, count( a -> a.status == I, agents))
+		push!(rs, count( a -> a.status == R, agents))
+			
+		
+		visualize(agents, L)
+		
+	end every N
+end
+
+# ╔═╡ 4d4548fe-0a66-11eb-375a-9313dc6c423d
+let
+	N = 50
+	L = 30
+	
+	agents = initialize(N, L)
+	infection = causes_outbreak
+	
+	ss = []
+	is = []
+	rs = []
+	
+ 	plot_before = visualize(agents, L)
+	
+	for sweep in 1:k_sweep_max
+		
+		for step in 1:N
+			step!(agents, L,  infection)
+		end
+		
+		push!(ss, count( a -> a.status == S, agents))
+		push!(is, count( a -> a.status == I, agents))
+		push!(rs, count( a -> a.status == R, agents))
+			
+		
+		visualize(agents, L)
+		
+	end 
+	
+	plot_after =  visualize(agents, L)
+	plot(plot_before, plot_after)
+end
 
 # ╔═╡ a885bf78-0a5c-11eb-2383-9d74c8765847
 md"""
@@ -632,19 +831,33 @@ let
 	N = 50
 	L = 40
 
-	#global social_agents = initialize_social(N, L)
-	Ss, Is, Rs = [], [], []
+	global social_agents = initialize_social(N, L)
+	infection = CollisionInfectionRecovery(.5, .0001)
+	ss, is, rs = [], [], []
 	
 	Tmax = 200
 	
-	@gif for t in 1:Tmax
+	for t in 1:Tmax
+		
+		for step in 1:N
+			step!(social_agents, L,  infection)
+		end
+		
+		push!(ss, count( a -> a.status == S, agents))
+		push!(is, count( a -> a.status == I, agents))
+		push!(rs, count( a -> a.status == R, agents))
+			
+			
+	end 
+	
+	result = plot(1:k_sweep_max, ss, ylim=(0, N), label="Susceptible")
+	plot!(result, 1:k_sweep_max, is, ylim=(0, N), label="Infectious")
+	plot!(result, 1:k_sweep_max, rs, ylim=(0, N), label="Recovered")
+		
+ 	plot_after = visualize(agents, L)
+	
+ 	plot(result, plot( plot_before, plot_after))
 
-		# 1. Step! a lot
-		# 2. Count S, I and R, push them to Ss Is Rs
-		# 3. call visualize on the agents,
-		# 4. place the SIR plot next to visualize.
-		# plot(left, right, size=(600,300)) # final plot
-	end
 end
 
 # ╔═╡ b59de26c-0a41-11eb-2c67-b5f3c7780c91
@@ -929,7 +1142,6 @@ bigbreak
 # ╟─181e156c-0970-11eb-0b77-49b143cc0fc0
 # ╠═1f299cc6-0970-11eb-195b-3f951f92ceeb
 # ╟─2848996c-0970-11eb-19eb-c719d797c322
-# ╠═2b37ca3a-0970-11eb-3c3d-4f788b411d1a
 # ╠═2dcb18d0-0970-11eb-048a-c1734c6db842
 # ╟─69d12414-0952-11eb-213d-2f9e13e4b418
 # ╟─fcafe15a-0a66-11eb-3ed7-3f8bbb8f5809
@@ -941,7 +1153,7 @@ bigbreak
 # ╟─66663fcc-0a58-11eb-3568-c1f990c75bf2
 # ╟─3e858990-0954-11eb-3d10-d10175d8ca1c
 # ╠═189bafac-0972-11eb-1893-094691b2073c
-# ╠═ad1253f8-0a34-11eb-265e-fffda9b6473f
+# ╟─ad1253f8-0a34-11eb-265e-fffda9b6473f
 # ╟─73ed1384-0a29-11eb-06bd-d3c441b8a5fc
 # ╠═96707ef0-0a29-11eb-1a3e-6bcdfb7897eb
 # ╠═b0337d24-0a29-11eb-1fab-876a87c0973f
@@ -949,7 +1161,7 @@ bigbreak
 # ╠═e24d5796-0a68-11eb-23bb-d55d206f3c40
 # ╠═ec8e4daa-0a2c-11eb-20e1-c5957e1feba3
 # ╟─e144e9d0-0a2d-11eb-016e-0b79eba4b2bb
-# ╠═ec576da8-0a2c-11eb-1f7b-43dec5f6e4e7
+# ╟─ec576da8-0a2c-11eb-1f7b-43dec5f6e4e7
 # ╟─71c358d8-0a2f-11eb-29e1-57ff1915e84a
 # ╠═5278e232-0972-11eb-19ff-a1a195127297
 # ╟─71c9788c-0aeb-11eb-28d2-8dcc3f6abacd
