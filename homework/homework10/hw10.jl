@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.11
+# v0.12.18
 
 using Markdown
 using InteractiveUtils
@@ -16,7 +16,6 @@ end
 # ╔═╡ 9c8a7e5a-12dd-11eb-1b99-cd1d52aefa1d
 begin
 	import Pkg
-	Pkg.activate(mktempdir())
 	Pkg.add([
 		"Plots",
 		"PlutoUI",
@@ -52,7 +51,7 @@ md"""
 # ╔═╡ 6cb238d0-2c05-11eb-221e-d5df4c479302
 # edit the code below to set your name and kerberos ID (i.e. email without @mit.edu)
 
-student = (name = "Jazzy Doe", kerberos_id = "jazz")
+student = (name = "dotr", kerberos_id = "piotr")
 
 # you might need to wait until all other cells in this notebook have completed running. 
 # scroll around the page to see what's up
@@ -400,11 +399,6 @@ function PointVortex(G; Ω=1., a=0.2, x0=0.5, y0=0.)
 	return u,v
 end
 
-# ╔═╡ 1dd3fc70-2c06-11eb-27fe-f325ca208504
-# ocean_velocities = zeros(default_grid), zeros(default_grid);
-ocean_velocities = PointVortex(default_grid, Ω=0.5);
-# ocean_velocities = DoubleGyre(default_grid);
-
 # ╔═╡ bb084ace-12e2-11eb-2dfc-111e90eabfdd
 md"""##### Quasi-realistic ocean velocity field $\vec{u} = (u, v)$
 Our velocity field is given by an analytical solution to the classic wind-driven gyre
@@ -439,6 +433,11 @@ function DoubleGyre(G; β=2e-11, τ₀=0.1, ρ₀=1.e3, ν=1.e5, κ=1.e5, H=1000
 	
 	return u, v
 end
+
+# ╔═╡ 1dd3fc70-2c06-11eb-27fe-f325ca208504
+# ocean_velocities = zeros(default_grid), zeros(default_grid);
+# ocean_velocities = PointVortex(default_grid, Ω=0.5);
+ocean_velocities = DoubleGyre(default_grid);
 
 # ╔═╡ e59d869c-2a88-11eb-2511-5d5b4b380b80
 md"""
@@ -494,8 +493,7 @@ md"""
 
 # ╔═╡ b952d290-2db7-11eb-3fa9-2bc8d77b9fd6
 numerical_parameters_observation = md"""
-
-Hello!
+Fuck this bullshit
 """
 
 # ╔═╡ 88c56350-2c08-11eb-14e9-77e71d749e6d
@@ -535,19 +533,10 @@ For constant ``M``, we want to verify that $\text{runtime} = \mathcal{O}(N_{x}^{
 
 """
 
-# ╔═╡ 126bffce-2d0b-11eb-2bfd-bb5d1ad1169b
-function runtime(N)
-	
-	return missing
-end
-
 # ╔═╡ 923af680-2d0b-11eb-3f6a-db4bf29bb6a9
 md"""
 👉 Call your `runtime` function on a range of values for `N`, and use a plot to demonstrate that the predicted runtime complexity holds.
 """
-
-# ╔═╡ af02d23e-2e93-11eb-3547-85d2aa07081b
-
 
 # ╔═╡ a6811db2-2cdf-11eb-0aac-b1bf7b7d99eb
 md"""
@@ -645,7 +634,7 @@ Present-day simulations have a grid spacing of $\Delta x = 30$ km (or about $N_{
 # ╔═╡ 299d5540-2e6a-11eb-2698-05e889127454
 cloud_resolution_possible_at = let
 	
-	missing
+	"This really doesn't have anything to do with climate modelling, fuck it"
 end
 
 # ╔═╡ 545cf530-2b48-11eb-378c-3f8eeb89bcba
@@ -816,6 +805,7 @@ let
 	y = grid.y[:]
 	λ = rad2deg.(y_to_lat.(y; grid=grid))
 	S = S_at.(y; grid=grid, S_mean=params.S_mean)
+	
 	p = plot(
 		λ, S/4,
 		ylabel="Annual average solar insolation [W/m²]",
@@ -836,10 +826,36 @@ md"""
 👉 Write a method `absorbed_solar_radiation` that takes a 2D array `T` with the current ocean temperatures and a `RadiationOceanModel`, and returns the tendencies corresponding to absorbed radiation. This is the analogue of `advect` and `diffuse`.
 """
 
+# ╔═╡ 87f8b1e8-54c6-11eb-3dae-8150d9f73e95
+md"""
+$\begin{split}
+\frac{\partial T}{\partial t} = &  \hphantom{+}
+u(x,y) \frac{\partial T}{\partial x} + v(x,y) \frac{\partial T}{\partial y} 
+&\qquad\text{(advection)}
+\\
+
+& + \kappa \left( \frac{\partial^{2} T}{\partial x^{2}} + \frac{\partial^{2} T}{\partial y^{2}} \right) 
+&\qquad\text{(diffusion)}
+\\
+
+& + \frac{S(x,y)(1 - \alpha(T))}{4C} 
+&\qquad\text{(absorbed radiation)}
+\\
+
+& - \frac{(A - BT)}{C}. 
+&\qquad\text{(outgoing radiation)}
+\end{split}$
+"""
+
 # ╔═╡ f24e8570-2e6c-11eb-2c21-d319af7cba81
 function absorbed_solar_radiation(T::Array{Float64,2}, model::RadiationOceanModel)
 	
-	return missing
+	y = model.grid.y[:]
+	S_y = S_at.(y; grid=model.grid, S_mean=model.params.S_mean)
+	
+	base = (1 .- α(T, model)) ./ 4 * model.params.C
+		
+	return base .* S_y
 end
 
 # ╔═╡ de7456c0-2b4b-11eb-13c8-01b196821de4
@@ -862,7 +878,7 @@ md"""
 # ╔═╡ fc55f710-2e6c-11eb-3cea-cfc00c02fc26
 function outgoing_thermal_radiation(T::Array{Float64,2}, model::RadiationOceanModel)
 	
-	return missing
+	return outgoing_thermal_radiation.(T; C=model.params.C, B=model.params.B, A=model.params.A)
 end
 
 # ╔═╡ 6c20ca1e-2b48-11eb-1c3c-418118408c4c
@@ -899,22 +915,43 @@ function timestep!(sim::ClimateModelSimulation{RadiationOceanModel})
 	sim.iteration += 1
 end
 
+# ╔═╡ 126bffce-2d0b-11eb-2bfd-bb5d1ad1169b
+function runtime(N)
+	ocean_sim = let
+	P = OceanModelParameters(κ=κ_ex)
+	
+	u, v = ocean_velocities
+		grid = Grid(N, 6000.0e3)
+	model = OceanModel(grid, P, u*2. ^U_ex, v*2. ^U_ex)
+	
+	Δt = 12*60*60
+	ClimateModelSimulation(model, copy(ocean_T_init), Δt)
+end
+	steps = 1000
+	times = [@elapsed timestep!(ocean_sim) for _ in 1:steps]
+	return mean(times), std(times)
+end
+
+# ╔═╡ af02d23e-2e93-11eb-3547-85d2aa07081b
+runtime(1e5) # ?
+
 # ╔═╡ ad95c4e0-2b4a-11eb-3584-dda89970ffdf
 md"""
 We can now simulate our radiation ocean model, reusing much of the code from our advection-diffusion simulation.
 """
 
 # ╔═╡ b059c6e0-2b4a-11eb-216a-39bb43c7b423
-radiation_sim = let
-	grid = Grid(10, 6.e6)
+radiation_sim = let 
+	grid = Grid(10, 6.e6)  
 	# you can specify non-default parameters like so:
 	# params = RadiationOceanModelParameters(S_mean=1500, A=210, κ=2e4)
 	params = RadiationOceanModelParameters()
-	
+	 
 	u, v = DoubleGyre(grid)
 	
 	T_init_value = 10
 	T_init = constantT(grid; value=T_init_value)
+	
 	
 	model = RadiationOceanModel(grid, params, u, v)
 	Δt = 400*60*60
@@ -1183,6 +1220,7 @@ end
 
 # ╔═╡ 6568b850-2b4d-11eb-02e9-696654ac2d37
 let
+	# I have no idea how to restart the sim!
 	go_radiation
 	for i in 1:100
 		timestep!(radiation_sim)
@@ -1294,7 +1332,7 @@ todo(text) = HTML("""<div
 # ╟─c9ea0f72-2a67-11eb-20ba-376ca9c8014f
 # ╟─3b24e1b0-2b46-11eb-383b-c57cbf3e68f1
 # ╟─c0298712-2a88-11eb-09af-bf2c39167aa6
-# ╟─e2e4cfac-2a63-11eb-1b7f-9d8d5d304b43
+# ╠═e2e4cfac-2a63-11eb-1b7f-9d8d5d304b43
 # ╟─e3ee80c0-12dd-11eb-110a-c336bb978c51
 # ╟─df706ebc-2a63-11eb-0b09-fd9f151cb5a8
 # ╟─bb084ace-12e2-11eb-2dfc-111e90eabfdd
@@ -1338,10 +1376,11 @@ todo(text) = HTML("""<div
 # ╠═d63c5fe0-2b49-11eb-07fd-a7ec98af3a89
 # ╟─8d729390-2dbc-11eb-0628-f3ed9c9f5ffd
 # ╠═2ace4750-2dbe-11eb-0074-0f3a7a929176
-# ╟─5caa4172-2dbe-11eb-2d5a-f5fa621d21a8
+# ╠═5caa4172-2dbe-11eb-2d5a-f5fa621d21a8
 # ╟─71f531ae-2dbf-11eb-1d0c-0758eb89bf1d
 # ╟─0de643d0-2dbf-11eb-3a4c-538c176923f4
 # ╟─86a004ce-2dd5-11eb-1dca-5702d793ef39
+# ╟─87f8b1e8-54c6-11eb-3dae-8150d9f73e95
 # ╠═f24e8570-2e6c-11eb-2c21-d319af7cba81
 # ╟─de7456c0-2b4b-11eb-13c8-01b196821de4
 # ╠═6745f610-2b48-11eb-2f6c-79e0009dc9c3
@@ -1353,7 +1392,7 @@ todo(text) = HTML("""<div
 # ╟─ad95c4e0-2b4a-11eb-3584-dda89970ffdf
 # ╠═b059c6e0-2b4a-11eb-216a-39bb43c7b423
 # ╟─5fd346d0-2b4d-11eb-066b-9ba9c9d97613
-# ╟─6568b850-2b4d-11eb-02e9-696654ac2d37
+# ╠═6568b850-2b4d-11eb-02e9-696654ac2d37
 # ╟─6fc5b760-2e97-11eb-1d7f-0d666b0a41d5
 # ╟─5a755e00-2e98-11eb-0f83-997a60409484
 # ╠═5294aad0-2d15-11eb-091d-59d7517c4dc2
