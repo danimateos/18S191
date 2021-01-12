@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.9
+# v0.12.18
 
 using Markdown
 using InteractiveUtils
@@ -16,7 +16,6 @@ end
 # ╔═╡ 1e06178a-1fbf-11eb-32b3-61769a79b7c0
 begin
 	import Pkg
-	Pkg.activate(mktempdir())
 	Pkg.add([
 			"Plots",
 			"PlutoUI",
@@ -43,7 +42,7 @@ md"""
 # ╔═╡ 23335418-2433-11eb-05e4-2b35dc6cca0e
 # edit the code below to set your name and kerberos ID (i.e. email without @mit.edu)
 
-student = (name = "Jazzy Doe", kerberos_id = "jazz")
+student = (name = "man dam", kerberos_id = "daman")
 
 # you might need to wait until all other cells in this notebook have completed running. 
 # scroll around the page to see what's up
@@ -206,7 +205,7 @@ md"""
 
 # ╔═╡ a86f13de-259d-11eb-3f46-1f6fb40020ce
 observations_from_changing_B = md"""
-Hello world!
+Returns to equilibrium faster
 """
 
 # ╔═╡ 3d66bd30-259d-11eb-2694-471fb3a4a7be
@@ -216,7 +215,7 @@ md"""
 
 # ╔═╡ 5f82dec8-259e-11eb-2f4f-4d661f44ef41
 observations_from_nonnegative_B = md"""
-Hello world!
+Positive feedback, so runaway warming
 """
 
 # ╔═╡ 56b68356-2601-11eb-39a9-5f4b8e580b87
@@ -234,9 +233,6 @@ md"""
 👉 Create a graph to visualize ECS as a function of B. 
 """
 
-# ╔═╡ b9f882d8-266b-11eb-2998-75d6539088c7
-
-
 # ╔═╡ 269200ec-259f-11eb-353b-0b73523ef71a
 md"""
 #### Exercise 1.2 - _Doubling CO₂_
@@ -252,13 +248,6 @@ The CO₂ concentrations in the _future_ depend on human action. There are sever
 md"""
 👉 In what year are we expected to have doubled the CO₂ concentration, under policy scenario RCP8.5?
 """
-
-# ╔═╡ 50ea30ba-25a1-11eb-05d8-b3d579f85652
-expected_double_CO2_year = let
-	
-	
-	missing
-end
 
 # ╔═╡ bade1372-25a1-11eb-35f4-4b43d4e8d156
 md"""
@@ -305,6 +294,14 @@ let
 		label="ΔT(t) = T(t) - T₀")
 end |> as_svg
 
+# ╔═╡ b9f882d8-266b-11eb-2998-75d6539088c7
+begin
+	xs = -2:.01:2
+	ys = [ECS(B=x) for x in xs]
+	
+	plot(xs, ys)
+end
+
 # ╔═╡ 736ed1b6-1fc2-11eb-359e-a1be0a188670
 B_samples = let
 	B_distribution = Normal(B̅, σ)
@@ -324,7 +321,10 @@ md"""
 """
 
 # ╔═╡ 3d72ab3a-2689-11eb-360d-9b3d829b78a9
-ECS_samples = missing
+begin
+	ECS_samples = [ECS(B=B) for B in B_samples]
+	histogram(ECS_samples, size=(600, 250), label=nothing, xlabel="ECS", ylabel="samples")
+end
 
 # ╔═╡ b6d7a362-1fc8-11eb-03bc-89464b55c6fc
 md"**Answer:**"
@@ -339,14 +339,17 @@ md"It looks like the ECS distribution is **not normally distributed**, even thou
 "
 
 # ╔═╡ 02173c7a-2695-11eb-251c-65efb5b4a45f
+mean(ECS_samples) / ECS(B=mean(B_samples))
 
+# ╔═╡ d9b5adc6-54ba-11eb-37fe-f98f34a5527b
+mean(ECS_samples .> ECS(B=mean(B_samples)))
 
 # ╔═╡ 440271b6-25e8-11eb-26ce-1b80aa176aca
 md"👉 Does accounting for uncertainty in feedbacks make our expectation of global warming better (less implied warming) or worse (more implied warming)?"
 
 # ╔═╡ cf276892-25e7-11eb-38f0-03f75c90dd9e
 observations_from_the_order_of_averaging = md"""
-Hello world!
+Possibly much worse
 """
 
 # ╔═╡ 5b5f25f0-266c-11eb-25d4-17e411c850c9
@@ -434,12 +437,13 @@ In this simulation, we used `T0 = 14` and `CO2 = t -> 280`, which is why `T` is 
 
 # ╔═╡ 9596c2dc-2671-11eb-36b9-c1af7e5f1089
 simulated_rcp85_model = let
-	
-	missing
+	ebm = Model.EBM(14.0, 1850, 1, Model.CO2_RCP85)
+	Model.run!(ebm, 2100)
+	ebm
 end
 
 # ╔═╡ f94a1d56-2671-11eb-2cdc-810a9c7a8a5f
-
+simulated_rcp85_model.T[end]
 
 # ╔═╡ 4b091fac-2672-11eb-0db8-75457788d85e
 md"""
@@ -459,7 +463,9 @@ md"""
 # ╔═╡ f688f9f2-2671-11eb-1d71-a57c9817433f
 function temperature_response(CO2::Function, B::Float64=-1.3)
 	
-	return missing
+	ebm = Model.EBM(14.0, 1850, 1, CO2, B=B)
+	Model.run!(ebm, 2100)
+	ebm.T[end]
 end
 
 # ╔═╡ 049a866e-2672-11eb-29f7-bfea7ad8f572
@@ -484,6 +490,11 @@ t = 1850:2100
 plot(t, Model.CO2_RCP85.(t), 
 	ylim=(0,1200), ylabel="CO2 concentration [ppm]")
 
+# ╔═╡ 50ea30ba-25a1-11eb-05d8-b3d579f85652
+expected_double_CO2_year = let
+	first(t[Model.CO2_RCP85.(t) .> 2 * Model.CO2_PI])
+end
+
 # ╔═╡ 40f1e7d8-252d-11eb-0549-49ca4e806e16
 @bind t_scenario_test Slider(t; show_value=true, default=1850)
 
@@ -499,7 +510,18 @@ We are interested in how the **uncertainty in our input** $B$ (the climate feedb
 """
 
 # ╔═╡ f2e55166-25ff-11eb-0297-796e97c62b07
+begin
+	low_emissions = [temperature_response(Model.CO2_RCP26, b) for b in B_samples]
+	high_emissions = [temperature_response(Model.CO2_RCP85, b) for b in B_samples]
+	
+	a = histogram(high_emissions .- Model.T0, title ="High emissions scenario")
+	b = histogram(low_emissions .- Model.T0, title ="Low emissions scenario")
+	
+	plot(a, b)
+end
 
+# ╔═╡ 0f78b51e-54bd-11eb-3d3f-3f4abbbfc72c
+mean(low_emissions .- Model.T0 .> 2.0), mean(high_emissions .- Model.T0 .> 2.0)
 
 # ╔═╡ 1ea81214-1fca-11eb-2442-7b0b448b49d6
 md"""
@@ -582,9 +604,6 @@ md"""
 👉 Create a slider for `CO2` between `CO2min` and `CO2max`. Just like the horizontal axis of our plot, we want the slider to be _logarithmic_. 
 """
 
-# ╔═╡ 1d388372-2695-11eb-3068-7b28a2ccb9ac
-
-
 # ╔═╡ 4c9173ac-2685-11eb-2129-99071821ebeb
 md"""
 👉 Write a function `step_model!` that takes an existing `ebm` and `new_CO2`, which performs a step of our interactive process:
@@ -596,7 +615,11 @@ md"""
 # ╔═╡ 736515ba-2685-11eb-38cb-65bfcf8d1b8d
 function step_model!(ebm::Model.EBM, CO2::Real)
 	
-	# your code here
+	ebm.t = ebm.t[1:1]
+	ebm.T = ebm.T[1:1]
+	
+	ebm.CO2 = _ -> CO2
+	Model.run!(ebm)
 	
 	return ebm
 end
@@ -617,11 +640,17 @@ CO2min = 10
 # ╔═╡ 2bbf5a70-2676-11eb-1085-7130d4a30443
 CO2max = 1_000_000
 
+# ╔═╡ 1d388372-2695-11eb-3068-7b28a2ccb9ac
+@bind log_CO2 Slider(log10(CO2min):.1:log10(CO2max), show_value=true)
+
+# ╔═╡ 8f1d8f06-54bd-11eb-2bed-81b139964793
+CO2 = 10^log_CO2
+
 # ╔═╡ de95efae-2675-11eb-0909-73afcd68fd42
 Tneo = -48
 
 # ╔═╡ 06d28052-2531-11eb-39e2-e9613ab0401c
-ebm = Model.EBM(Tneo, 0., 5., Model.CO2_const)
+ebm = Model.EBM(Tneo, 0., 5., x -> CO2)
 
 # ╔═╡ 378aed18-252b-11eb-0b37-a3b511af2cb5
 let
@@ -638,6 +667,8 @@ let
 	add_reference_points!(p)
 	
 	# your code here 
+	
+	step_model!(ebm, CO2)
 	
 	plot!(p, 
 		[ebm.CO2(ebm.t[end])], [ebm.T[end]],
@@ -686,7 +717,7 @@ md"""
 # ╔═╡ 9eb07a6e-2687-11eb-0de3-7bc6aa0eefb0
 co2_to_melt_snowball = let
 	
-	missing
+	"boring shit I move to next one"
 end
 
 # ╔═╡ 3a35598a-2527-11eb-37e5-3b3e4c63c4f7
@@ -772,7 +803,7 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╠═1e06178a-1fbf-11eb-32b3-61769a79b7c0
 # ╟─87e68a4a-2433-11eb-3e9d-21675850ed71
 # ╟─fe3304f8-2668-11eb-066d-fdacadce5a19
-# ╟─930d7154-1fbf-11eb-1c3a-b1970d291811
+# ╠═930d7154-1fbf-11eb-1c3a-b1970d291811
 # ╟─1312525c-1fc0-11eb-2756-5bc3101d2260
 # ╠═c4398f9c-1fc4-11eb-0bbb-37f066c6027d
 # ╟─7f961bc0-1fc5-11eb-1f18-612aeff0d8df
@@ -802,12 +833,13 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╠═1f148d9a-1fc8-11eb-158e-9d784e390b24
 # ╟─cf8dca6c-1fc8-11eb-1f89-099e6ba53c22
 # ╠═02173c7a-2695-11eb-251c-65efb5b4a45f
+# ╠═d9b5adc6-54ba-11eb-37fe-f98f34a5527b
 # ╟─440271b6-25e8-11eb-26ce-1b80aa176aca
 # ╠═cf276892-25e7-11eb-38f0-03f75c90dd9e
 # ╟─5b5f25f0-266c-11eb-25d4-17e411c850c9
 # ╟─3f823490-266d-11eb-1ba4-d5a23975c335
 # ╟─971f401e-266c-11eb-3104-171ae299ef70
-# ╠═746aa5bc-266c-11eb-14c9-63ccc313f5de
+# ╟─746aa5bc-266c-11eb-14c9-63ccc313f5de
 # ╟─a919d584-2670-11eb-1cf9-2327c8135d6d
 # ╠═bfb07a0a-2670-11eb-3938-772499c637b1
 # ╟─12cbbab0-2671-11eb-2b1f-038c206e84ce
@@ -825,16 +857,18 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╟─ee1be5dc-252b-11eb-0865-291aa823b9e9
 # ╟─06c5139e-252d-11eb-2645-8b324b24c405
 # ╠═f2e55166-25ff-11eb-0297-796e97c62b07
+# ╠═0f78b51e-54bd-11eb-3d3f-3f4abbbfc72c
 # ╟─1ea81214-1fca-11eb-2442-7b0b448b49d6
 # ╟─a0ef04b0-25e9-11eb-1110-cde93601f712
 # ╟─3e310cf8-25ec-11eb-07da-cb4a2c71ae34
 # ╟─d6d1b312-2543-11eb-1cb2-e5b801686ffb
-# ╠═378aed18-252b-11eb-0b37-a3b511af2cb5
+# ╟─378aed18-252b-11eb-0b37-a3b511af2cb5
 # ╟─3cbc95ba-2685-11eb-3810-3bf38aa33231
 # ╟─68b2a560-2536-11eb-0cc4-27793b4d6a70
 # ╟─0e19f82e-2685-11eb-2e99-0d094c1aa520
 # ╟─1eabe908-268b-11eb-329b-b35160ec951e
 # ╠═1d388372-2695-11eb-3068-7b28a2ccb9ac
+# ╠═8f1d8f06-54bd-11eb-2bed-81b139964793
 # ╟─53c2eaf6-268b-11eb-0899-b91c03713da4
 # ╠═06d28052-2531-11eb-39e2-e9613ab0401c
 # ╟─4c9173ac-2685-11eb-2129-99071821ebeb
