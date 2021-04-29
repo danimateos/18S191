@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.7
+# v0.12.18
 
 using Markdown
 using InteractiveUtils
@@ -16,13 +16,10 @@ end
 # ╔═╡ c3e52bf2-ca9a-11ea-13aa-03a4335f2906
 begin
 	import Pkg
-	Pkg.activate(mktempdir())
-	Pkg.add([
-			Pkg.PackageSpec(name="Plots", version="1.6-1"),
-			Pkg.PackageSpec(name="PlutoUI", version="0.6.8-0.6"),
-			Pkg.PackageSpec(name="ImageMagick"),
-			Pkg.PackageSpec(name="Images", version="0.23"),
-			])
+	Pkg.PackageSpec(name="Plots", version="1.6-1"),
+	Pkg.PackageSpec(name="PlutoUI", version="0.6.8-0.6"),
+	Pkg.PackageSpec(name="ImageMagick"),
+	Pkg.PackageSpec(name="Images", version="0.23"),
 	using Plots
 	using PlutoUI
 	using LinearAlgebra

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.7
+# v0.12.18
 
 using Markdown
 using InteractiveUtils
@@ -643,7 +643,7 @@ md"#### Package dependencies"
 # ╟─5a51fac0-179c-11eb-0b65-859cc9232a3a
 # ╠═35dfe0d2-17b0-11eb-20dc-7d7f4c5568ae
 # ╟─3a549f2a-17b0-11eb-1d80-4bc2abc3dba6
-# ╠═d0bf9b06-179c-11eb-0f1c-2fd535cb0e57
+# ╟─d0bf9b06-179c-11eb-0f1c-2fd535cb0e57
 # ╟─e81fc2f8-17b0-11eb-20f8-2f4e890dc867
 # ╠═e5902d52-17b0-11eb-1ba3-4be6c2bbc90f
 # ╟─eba4ba20-22b2-11eb-3989-dde4f9c26702
